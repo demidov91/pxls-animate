@@ -1,7 +1,11 @@
 *.js
 __pycache__
 .idea
+
 *.dat
 *.jpg
 *.jpeg
+*.png
+*.gif
+
 *.log
