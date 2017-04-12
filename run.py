@@ -3,7 +3,6 @@ import argparse
 import defines
 import requests
 from PIL import Image
-from typing import Tuple
 from utils import data_file_to_rgb_array, list_filepaths_in_datetime_range
 import datetime
 import imageio
@@ -28,12 +27,12 @@ def to_image(dat_file: str, out_file: str, start_point, size):
 def create_gif(
         start_dt: datetime.datetime,
         end_dt: datetime.datetime,
-        start_point: Tuple[int, int],
-        size: Tuple[int, int],
+        start_point: tuple,
+        size: tuple,
         out_file: str):
     frames = (
         np.array(list(data_file_to_rgb_array(x, start_point, size)), dtype=np.uint8).reshape((size[1], size[0], 3))
-        for x in list_filepaths_in_datetime_range(start_dt, end_dt)[::5]
+        for x in list_filepaths_in_datetime_range(start_dt, end_dt)[::15]
     )
     imageio.mimwrite(out_file, frames)
 

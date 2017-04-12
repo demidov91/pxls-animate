@@ -1,6 +1,5 @@
 import gzip
 import defines
-from typing import Iterable, Tuple
 import os
 import datetime
 import re
@@ -9,12 +8,12 @@ from contextlib import ContextDecorator
 dt_in_filename_pattern = re.compile('(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})')
 
 
-def data_file_to_rgb_array(dat_file: str, start_point=(0, 0), size=defines.DIMENSIONS) -> Iterable[Tuple[int]]:
+def data_file_to_rgb_array(dat_file: str, start_point=(0, 0), size=defines.DIMENSIONS):
     with compressed_reader(dat_file) as f:
         yield from f.read_rectangle(start_point, size)
 
 
-def list_filepaths_in_datetime_range(start_dt, end_dt) -> Iterable[str]:
+def list_filepaths_in_datetime_range(start_dt, end_dt):
     paths = []
     for file_path in os.listdir(defines.DATA_DIR):
         match = dt_in_filename_pattern.search(file_path)
@@ -44,7 +43,7 @@ class compressed_reader(ContextDecorator):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.fp.close()
 
-    def read_rectangle(self, start: Tuple[int, int], size: Tuple[int, int]):
+    def read_rectangle(self, start: tuple, size: tuple):
         for row in range(start[1], start[1] + size[1]):
             row_start = row * defines.DIMENSIONS[0] + start[0]
             self.fp.seek(row_start // 2)
