@@ -1,3 +1,5 @@
+import datetime
+
 PALETTE = [0xFFFFFF, 0xE4E4E4, 0x888888, 0x222222, 0xFFA7D1, 0xE50000, 0xE59500, 0xA06A42, 0xE5D900, 0x94E044, 0x02BE01,
            0x00D3DD, 0x0083C7, 0x0000EA, 0xCF6EE4, 0x820080]
 
@@ -29,3 +31,5 @@ DATA_DIR = 'data'
 DATA_DT_FORMAT = '%Y_%m_%d_%H_%M_%S'
 
 API_DATETIME_FORMAT = '%Y-%m-%d-%H%M%S'
+
+START_DATETIME = datetime.datetime(2017, 4, 11, 12, 0)
