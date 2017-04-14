@@ -17,4 +17,11 @@ def get_flask_pair(arg_name):
     if not arg_string:
         return None
 
-    return arg_string.split('-')
+    return tuple(int(x) for x in arg_string.split('-'))
+
+
+def get_flask_arg(arg_name):
+    """
+    Just a helper to call requests.args.get(arg_name)
+    """
+    return request.args.get(arg_name)

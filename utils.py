@@ -9,6 +9,7 @@ import settings
 import glob
 from PIL import Image
 from itertools import chain
+from fnmatch import translate
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ dt_in_filename_pattern = re.compile('(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})')
 # GIF with more data than this becomes too detailed.
 MAX_GIF_INFO = defines.DIMENSIONS[0] * defines.DIMENSIONS[1] * 90 // 16
 
-SEARCH_FOR_DATA_FILE_BY_PATTERN = '%Y_%m_%d_%H_%M'
+SEARCH_FOR_DATA_FILE_BY_PATTERN = '%Y_%m_%d'
 
 
 def points_to_size(start_point: tuple, end_point: tuple):
@@ -117,33 +118,38 @@ def configure_logger():
     logging.basicConfig(level=logging._nameToLevel[settings.LOG_LEVEL])
 
 
-def _get_exact_dat_file(target_time: datetime.datetime) -> str:
-    files = glob.glob(os.path.join(defines.DATA_DIR, target_time.strftime(SEARCH_FOR_DATA_FILE_BY_PATTERN)) + '_*.dat')
-    if files:
-        return files[0]
-
-    return None
-
-
 def get_nearest_dat_file(target_time: datetime.datetime) -> str:
-    file_path = _get_exact_dat_file(target_time)
-    if file_path:
-        return file_path
+    today = target_time.date()
+    yesterday = today - datetime.timedelta(days=1)
+    tomorrow = today + datetime.timedelta(days=1)
 
-    region = 0
-    while region < 60 * 24 * 5:
-        region += 1
-        file_path = _get_exact_dat_file(target_time - datetime.timedelta(minutes=region)) or \
-                    _get_exact_dat_file(target_time - datetime.timedelta(minutes=region))
-        if file_path:
-            return file_path
+    str_dates = tuple(x.strftime(SEARCH_FOR_DATA_FILE_BY_PATTERN) for x in (yesterday, today, tomorrow))
 
+    search_pattern_string = '(' + '|'.join('{}.+'.format(x) for x in str_dates) + ')' + '\.dat'
 
+    search_pattern = re.compile(search_pattern_string)
 
+    logger.debug('Search pattern: %s', search_pattern_string)
 
+    min_delta = datetime.timedelta(days=2)
+    file_found = None
 
+    for file_name in os.listdir(defines.DATA_DIR):
+        datetime_match = search_pattern.match(file_name)
+        if not datetime_match:
+            continue
 
+        file_time = datetime.datetime.strptime(datetime_match.group(1), defines.DATA_DT_FORMAT)
+        delta = abs(file_time - target_time)
+        if delta < min_delta:
+            if delta < datetime.timedelta(minutes=1):
+                file_found = file_name
+                break
 
+            min_delta = delta
+            file_found = file_name
 
+    if file_found is None:
+        return
 
-
+    return os.path.join(defines.DATA_DIR, file_found)

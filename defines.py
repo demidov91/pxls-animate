@@ -30,6 +30,6 @@ DATA_DIR = 'data'
 
 DATA_DT_FORMAT = '%Y_%m_%d_%H_%M_%S'
 
-API_DATETIME_FORMAT = '%Y-%m-%d-%H%M%S'
+API_DATETIME_FORMAT = '%Y-%m-%d-%H%M'
 
 START_DATETIME = datetime.datetime(2017, 4, 11, 12, 0)
