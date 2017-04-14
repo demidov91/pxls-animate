@@ -6,10 +6,9 @@ import re
 from contextlib import ContextDecorator
 import numpy as np
 import settings
-import glob
 from PIL import Image
 from itertools import chain
-from fnmatch import translate
+import imageio
 
 import logging
 logger = logging.getLogger(__name__)
@@ -92,26 +91,31 @@ class compressed_reader(ContextDecorator):
             yield defines.PALETTE_BY_BYTE[self.fp.read(1)[0] >> 4]
 
 
-def get_gif_frames(
-        start_dt: datetime.datetime,
-        end_dt: datetime.datetime,
-        start_point: tuple,
-        size: tuple):
-    if start_dt is None:
-        start_dt = defines.START_DATETIME
+class GifBuilder:
+    step = None         # type: int
+    files_count = None  # type: int
 
-    if end_dt is None:
-        end_dt = datetime.datetime.now()
+    def __init__(self,
+                 start_dt: datetime.datetime,
+                 end_dt: datetime.datetime,
+                 start_point: tuple,
+                 size: tuple):
+        self.start_dt = start_dt or defines.START_DATETIME
+        self.end_dt = end_dt or datetime.datetime.now()
+        self.start_point = start_point
+        self.size = size
 
-    file_paths = tuple(list_filepaths_in_datetime_range(start_dt, end_dt))
+    def build(self, target):
+        file_paths = tuple(list_filepaths_in_datetime_range(self.start_dt, self.end_dt))
+        self.files_count = len(file_paths)
+        self.step = self.size[0] * self.size[1] * self.files_count // MAX_GIF_INFO + 1
 
-    step = size[0] * size[1] * len(file_paths) // MAX_GIF_INFO + 1
+        logger.info('Step %d is chosen for %dx%d gif from %s till %s (potentially %d frames)',
+                    self.step, self.size[0], self.size[1], self.start_dt, self.end_dt, self.files_count
+                    )
 
-    logger.info('Step %d is chosen for %dx%d gif from %s till %s (potentially %d frames)',
-                step, size[0], size[1], start_dt, end_dt, len(file_paths)
-                )
-
-    return (data_file_to_imageio_array(x, start_point, size) for x in file_paths[::step])
+        frames = (data_file_to_imageio_array(x, self.start_point, self.size) for x in file_paths[::self.step])
+        imageio.mimwrite(target, frames, format='gif')
 
 
 def configure_logger():

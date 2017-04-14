@@ -1,11 +1,10 @@
 from flask import Flask, make_response
-from utils import configure_logger, data_file_to_pil_image, points_to_size, get_nearest_dat_file, get_gif_frames
+from utils import configure_logger, data_file_to_pil_image, points_to_size, get_nearest_dat_file, GifBuilder
 from flask_util import get_flask_datetime, get_flask_pair, get_flask_arg
 from io import BytesIO
 import datetime
 import logging
 import defines
-import imageio
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
@@ -36,13 +35,13 @@ def get_gif():
     end_point = get_flask_pair('end-point') or tuple(x-1 for x in defines.DIMENSIONS)
 
     buffer = BytesIO()
-    imageio.mimwrite(
-        buffer,
-        get_gif_frames(start, end, start_point, points_to_size(start_point, end_point)),
-        format='gif'
-    )
+    gif_builder = GifBuilder(start, end, start_point, points_to_size(start_point, end_point))
+    gif_builder.build(buffer)
+
     response = make_response(buffer.getvalue())
     response.headers['Content-Type'] = 'image/gif'
+    if not end:
+        response.headers['Cache-Control'] = 'max-age={}'.format(gif_builder.step * 60)
 
     if get_flask_arg('file') is not None:
         start_as_text = start and start.strftime('%Y-%m-%d %H:%M') or 'start'
@@ -58,4 +57,4 @@ def get_gif():
 
 if __name__ == '__main__':
     configure_logger()
-    app.run()
+    app.run(host='0.0.0.0')

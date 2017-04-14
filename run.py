@@ -3,9 +3,8 @@ import argparse
 import defines
 import requests
 
-from utils import data_file_to_pil_image, get_gif_frames, configure_logger, points_to_size
+from utils import data_file_to_pil_image, GifBuilder, configure_logger, points_to_size
 import datetime
-import imageio
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ def create_gif(
         start_point: tuple,
         size: tuple,
         out_file: str):
-    imageio.mimwrite(out_file, get_gif_frames(start_dt, end_dt, start_point, size))
+    GifBuilder(start_dt, end_dt, start_point, size).build(out_file)
 
 
 if __name__ == '__main__':
