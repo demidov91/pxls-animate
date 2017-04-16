@@ -1,10 +1,10 @@
 $(function(){
-    $('#gen-image button').click(function(){
-        this.action = '/im';
+    $('#get-image button').click(function(){
+        $('form')[0].action = 'http://pxls.pautuzin.by/im';
     });
 
-    $('#gen-gif button').click(function(){
-        this.action = '/gif';
+    $('#get-gif button').click(function(){
+        $('form')[0].action = 'http://pxls.pautuzin.by/gif';
     });
 
     $('#last-snapshot').Jcrop({
