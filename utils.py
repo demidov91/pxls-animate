@@ -9,6 +9,7 @@ import settings
 from PIL import Image
 from itertools import chain
 import imageio
+from logging.config import dictConfig
 
 import logging
 logger = logging.getLogger(__name__)
@@ -119,7 +120,7 @@ class GifBuilder:
 
 
 def configure_logger():
-    logging.basicConfig(level=logging._nameToLevel[settings.LOG_LEVEL])
+    dictConfig(settings.LOGGING)
 
 
 def get_nearest_dat_file(target_time: datetime.datetime) -> str:

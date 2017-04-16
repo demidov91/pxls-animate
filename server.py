@@ -8,14 +8,14 @@ import defines
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
-
+configure_logger()
 
 @app.route('/im')
 def get_image():
     start_point = get_flask_pair('start-point') or (0, 0)
-    end_point = get_flask_pair('start-point') or tuple(x-1 for x in defines.DIMENSIONS)
-    nearest_time = get_flask_datetime('time') or datetime.datetime.now()
-    dat_file = get_nearest_dat_file(nearest_time)
+    end_point = get_flask_pair('end-point') or tuple(x-1 for x in defines.DIMENSIONS)
+    for_time = get_flask_datetime('time')
+    dat_file = get_nearest_dat_file(for_time or datetime.datetime.now())
     if not dat_file:
         return '404', 404
 
@@ -24,6 +24,16 @@ def get_image():
     image.save(buffer, format='png')
     response = make_response(buffer.getvalue())
     response.headers['Content-Type'] = 'image/png'
+
+    if not for_time:
+        response.headers['Cache-Control'] = 'max-age={}'.format(60)
+
+    if get_flask_arg('file') is not None:
+        file_name = '{} {}'.format(start_point, end_point)
+        if for_time:
+            file_name += ' {}'.format(for_time.strftime('%Y-%m-%d %H:%M'))
+        response.headers['Content-Disposition'] = 'attachment; filename="{}"'.format(file_name)
+
     return response
 
 
@@ -56,5 +66,4 @@ def get_gif():
 
 
 if __name__ == '__main__':
-    configure_logger()
     app.run(host='0.0.0.0')
