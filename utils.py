@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 dt_in_filename_pattern = re.compile('(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})')
 
 # GIF with more data than this becomes too detailed.
-MAX_GIF_INFO = defines.DIMENSIONS[0] * defines.DIMENSIONS[1] * 90 // 16
+MAX_GIF_INFO = defines.DIMENSIONS[0] * defines.DIMENSIONS[1] * 90 // 32
 
 SEARCH_FOR_DATA_FILE_BY_PATTERN = '%Y_%m_%d'
 
