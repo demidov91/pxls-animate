@@ -1,0 +1,5 @@
+.toLeft{float: left;}
+.clear{clear:both;}
+
+#buttons{width: 500px; text-align: center;}
+#buttons>div{width: 50%;}

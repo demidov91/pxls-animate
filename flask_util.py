@@ -12,12 +12,17 @@ def get_flask_datetime(arg_name):
     return datetime.datetime.strptime(date_string, defines.API_DATETIME_FORMAT)
 
 
-def get_flask_pair(arg_name):
+def get_coordinates(arg_name):
     arg_string = request.args.get(arg_name)
-    if not arg_string:
-        return None
+    if arg_string:
+        return tuple(int(x) for x in arg_string.split('-'))
 
-    return tuple(int(x) for x in arg_string.split('-'))
+    x = request.args.get(arg_name + '-x')
+    y = request.args.get(arg_name + '-y')
+    if not (x and y):
+        return
+
+    return int(x), int(y)
 
 
 def get_flask_arg(arg_name):
