@@ -110,6 +110,8 @@ class GifBuilder:
         file_paths = tuple(list_filepaths_in_datetime_range(self.start_dt, self.end_dt))
         self.files_count = len(file_paths)
         self.step = self.size[0] * self.size[1] * self.files_count // MAX_GIF_INFO + 1
+        if self.step < 60:
+            self.step = 60
 
         logger.info('Step %d is chosen for %dx%d gif from %s till %s (potentially %d frames)',
                     self.step, self.size[0], self.size[1], self.start_dt, self.end_dt, self.files_count

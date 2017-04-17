@@ -9,6 +9,7 @@ __pycache__
 
 data/*
 logs/*
+image/*
 
 local_settings.py
 cron-save.sh
