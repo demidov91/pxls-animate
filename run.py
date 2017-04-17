@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def save(out_file: str):
     data = bytearray()
-    for byte_1, byte_2 in requests.get(defines.CANVAS_URL, timeout=20).iter_content(chunk_size=2):
+    for byte_1, byte_2 in requests.get(defines.CANVAS_URL, timeout=20, cookies={'pxls-agegate': '1'}).iter_content(chunk_size=2):
         data.append(byte_1 << 4 | byte_2)
 
     with gzip.open(out_file, 'wb') as f:

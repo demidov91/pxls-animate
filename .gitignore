@@ -7,7 +7,7 @@ __pycache__
 *.png
 *.gif
 
-*.log
+logs/*
 
 local_settings.py
 cron-save.sh
