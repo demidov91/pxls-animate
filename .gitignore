@@ -1,12 +1,13 @@
 __pycache__
 .idea
 
-*.dat
-*.jpg
-*.jpeg
-*.png
-*.gif
+./*.dat
+./*.jpg
+./*.jpeg
+./*.png
+./*.gif
 
+data/*
 logs/*
 
 local_settings.py
