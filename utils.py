@@ -24,6 +24,13 @@ SEARCH_FOR_DATA_FILE_BY_PATTERN = '%Y_%m_%d'
 
 
 def points_to_size(start_point: tuple, end_point: tuple):
+    """
+    Helper-method to convert left top and right bottom coordinates into (width, height) tuple.
+    (5, 5), (5, 5) -> (1, 1)
+    (5, 5), (6, 6) -> (2, 2)
+    :param start_point: left top point.
+    :param end_point: right bottom point.
+    """
     return tuple(b - a + 1 for a, b in zip(start_point, end_point))
 
 
@@ -32,16 +39,22 @@ def _data_file_to_rgb_array(dat_file: str, start_point=(0, 0), size=defines.DIME
         yield from reader.read_rectangle(start_point, size)
 
 
-def data_file_to_pil_image(dat_file: str, start_point=(0, 0), size=defines.DIMENSIONS):
+def data_file_to_pil_image(dat_file: str, start_point=(0, 0), size=defines.DIMENSIONS, thumbnail: float=None):
     data = bytes(chain(*_data_file_to_rgb_array(dat_file, start_point, size)))
-    return Image.frombytes('RGB', size, data)
+    im = Image.frombytes('RGB', size, data)
+    if thumbnail is None or thumbnail == 1.0:
+        return im
+
+    size = tuple(int(x * thumbnail) for x in size)
+    if not any(size):
+        size = (10, 10)
+        logger.info('%s thumbnail was too little. Accepting %dx%d.', thumbnail, size[0], size[1])
+
+    im.thumbnail(size)
+    return im
 
 
-def data_file_to_imageio_array(dat_file: str, start_point=(0, 0), size=defines.DIMENSIONS):
-    return np.array(
-        list(_data_file_to_rgb_array(dat_file, start_point, size)),
-        dtype=np.uint8
-    ).reshape((size[1], size[0], 3))
+
 
 
 def list_filepaths_in_datetime_range(start_dt, end_dt):
@@ -100,11 +113,13 @@ class GifBuilder:
                  start_dt: datetime.datetime,
                  end_dt: datetime.datetime,
                  start_point: tuple,
-                 size: tuple):
+                 size: tuple,
+                 thumbnail: float=None):
         self.start_dt = start_dt or defines.START_DATETIME
         self.end_dt = end_dt or datetime.datetime.now()
         self.start_point = start_point
         self.size = size
+        self.thumbnail = thumbnail
 
     def build(self, target):
         file_paths = tuple(list_filepaths_in_datetime_range(self.start_dt, self.end_dt))
@@ -117,8 +132,21 @@ class GifBuilder:
                     self.step, self.size[0], self.size[1], self.start_dt, self.end_dt, self.files_count
                     )
 
-        frames = (data_file_to_imageio_array(x, self.start_point, self.size) for x in file_paths[::self.step])
-        imageio.mimwrite(target, frames, format='gif')
+        frames = (self.data_file_to_imageio_array(x) for x in file_paths[::self.step])
+        imageio.mimwrite(target, frames, format='gif', subrectangles=True)
+
+    def data_file_to_imageio_array(self, dat_file: str):
+        if self.thumbnail is None or self.thumbnail == 1.0:
+            pixel_generator = _data_file_to_rgb_array(dat_file, self.start_point, self.size)
+            height = self.size[1]
+            width = self.size[0]
+        else:
+            image = data_file_to_pil_image(dat_file, self.start_point, self.size, self.thumbnail)
+            height = image.height
+            width = image.width
+            pixel_generator = image.getdata()
+
+        return np.array(list(pixel_generator), dtype=np.uint8).reshape((height, width, 3))
 
 
 def configure_logger():
