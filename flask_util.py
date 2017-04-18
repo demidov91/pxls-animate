@@ -25,6 +25,14 @@ def get_coordinates(arg_name):
     return int(x), int(y)
 
 
+def get_flask_float(arg_name):
+    arg = request.args.get(arg_name)
+    if not arg:
+        return None
+
+    return float(arg)
+
+
 def get_flask_arg(arg_name):
     """
     Just a helper to call requests.args.get(arg_name)

@@ -1,70 +1,122 @@
-var jcrop_api;
+function multiply(data, koef){
+    var multiplied = [];
+    for (i=0; i < data.length; i++){
+        multiplied.push(Math.floor(data[i] * koef));
+    }
+    return multiplied;
+}
 
-// width == height
-BOTH_DIMENSIONS = 2000
-
-var isInitialCrop = true;
 
 $(function(){
-    $('#get-image button').click(function(){
-        $('form')[0].action = 'http://pxls.pautuzin.by/im';
-    });
+    App = {
+        jStartX: $('[name="start-point-x"]'),
+        jStartY: $('[name="start-point-y"]'),
+        jEndX: $('[name="end-point-x"]'),
+        jEndY: $('[name="end-point-y"]'),
+        jImage: $('#last-snapshot'),
+        isInitialCrop: true,
+        BOTH_DIMENSIONS: 2000,
 
-    $('#get-gif button').click(function(){
-        $('form')[0].action = 'http://pxls.pautuzin.by/gif';
-    });
+        init: function(){
+            $('#get-image button').click(function(){
+                $('form')[0].action = 'http://pxls.pautuzin.by/im';
+            });
 
-    $('#last-snapshot').Jcrop({
-        onChange: cropIsChanged,
-        onSelect: stopCropping,
-    }, function(){
-		jcrop_api = this;
-		setCropByInputs();
-	});
+            $('#get-gif button').click(function(){
+                $('form')[0].action = 'http://pxls.pautuzin.by/gif';
+            });
 
-    $('form input[type="number"]').bind('input', setCropByInputs);	
+            this.fit_viewport();
+
+            var app = this;
+            this.jImage.Jcrop({
+                onChange: this.cropIsChanged.bind(this),
+                onSelect: this.stopCropping.bind(this),
+            }, function(){
+                app.jcrop_api = this;
+                app.setCropByInputs();
+            });
+
+            $('form input[type="number"]').bind('input', this.setCropByInputs.bind(this));
+        },
+
+        stopCropping: function (e){
+            this.cropIsChanged(e);
+            if (this.isInitialCrop){
+                this.isInitialCrop = false;
+                return;
+            }
+            $('html, body').animate({
+                scrollTop: $("form").offset().top
+            }, 200);
+        },
+
+        cropIsChanged: function(e){
+            var coordinates = this.toApiCoordinates([e.x, e.y, e.x2, e.y2]);
+            if (!this.areCorrectCoordinates(coordinates)) return;
+            this.jStartX.val(coordinates[0]);
+            this.jStartY.val(coordinates[1]);
+            this.jEndX.val(coordinates[2]);
+            this.jEndY.val(coordinates[3]);
+        },
+
+        setCropByInputs: function (){
+            if (!this.jcrop_api) return;
+            var coords = this.toThumbnailCoordinates([
+                this.jStartX.val(), this.jStartY.val(), this.jEndX.val(), this.jEndY.val()
+            ]);
+
+            if (!this.areCorrectCoordinates(coords)){
+                this.jcrop_api.release();
+                return;
+            }
+
+            this.jcrop_api.setSelect(coords);
+        },
+
+        isCorrectCoordinate: function (str_coordinate){
+            var int_coordinate = parseInt(str_coordinate);
+            return ;
+        },
+
+        areCorrectCoordinates: function (coordinates){
+            int_coordinates = [];
+            for (i=0; i< coordinates.length; i++){
+                int_coordinates.push(parseInt(coordinates[i]));
+            }
+
+            for (coord in int_coordinates){
+                if (!((0 <= coord) && (coord < this.BOTH_DIMENSIONS))) return;
+            }
+
+            if (int_coordinates[0] > int_coordinates[2] || int_coordinates[1] > int_coordinates[3]) return;
+
+            return true;
+        },
+
+        fit_viewport: function (){
+            var doubleMargin = this.jImage.outerWidth(true) - this.jImage.outerWidth();
+
+            var width = $(window).width() - doubleMargin;
+
+            if (width >= this.BOTH_DIMENSIONS){
+                this.thumbnail = null;
+                this.jImage.attr('src', this.jImage.data('url'));
+            } else {
+                this.jImage.attr('width', width);
+                this.thumbnail = width / this.BOTH_DIMENSIONS;
+                this.jImage.attr('src', this.jImage.data('url') + '?thumbnail=' + this.thumbnail);
+            }
+        },
+
+        toApiCoordinates: function(coordinates) {
+            console.log(this.thumbnail);
+            return this.thumbnail ? multiply(coordinates, 1 / this.thumbnail): coordinates;
+        },
+
+        toThumbnailCoordinates: function(coordinates) {
+            return this.thumbnail ? multiply(coordinates, this.thumbnail): coordinates;
+        }
+    }
+    App.init();
 });
-
-function cropIsChanged(e){
-	$('[name="start-point-x"]').val(e.x);
-    $('[name="start-point-y"]').val(e.y);
-    $('[name="end-point-x"]').val(e.x2);
-    $('[name="end-point-y"]').val(e.y2);
-}
-
-function stopCropping(e){
-    cropIsChanged(e);
-	if (isInitialCrop){
-		isInitialCrop = false;
-		return;
-	}
-    $('html, body').animate({
-        scrollTop: $("form").offset().top
-    }, 200);
-}
-
-function setCropByInputs(){
-	if (!jcrop_api) return;
-	var x1 = $('[name="start-point-x"]').val();
-	var y1 = $('[name="start-point-y"]').val();
-	var x2 = $('[name="end-point-x"]').val();
-	var y2 = $('[name="end-point-y"]').val();
-
-	var coords = [x1, y1, x2, y2];
-	
-	if (!areCorrectCoordinates(coords)) return;	
-
-	jcrop_api.setSelect(coords);
-}
-
-function isCorrectCoordinate(str_coordinate){
-	var int_coordinate = parseInt(str_coordinate);
-	return (0 <= int_coordinate) && (int_coordinate < BOTH_DIMENSIONS);	
-}
-
-function areCorrectCoordinates(coordinates){
-	for (coord in coordinates){
-		if (!isCorrectCoordinate(coord)) return;
-	}
-	return true;
-}
