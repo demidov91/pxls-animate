@@ -1,11 +1,11 @@
 __pycache__
 .idea
 
-./*.dat
-./*.jpg
-./*.jpeg
-./*.png
-./*.gif
+/*.dat
+/*.jpg
+/*.jpeg
+/*.png
+/*.gif
 
 data/*
 logs/*
@@ -13,3 +13,4 @@ image/*
 
 local_settings.py
 cron-save.sh
+cron-diff.sh

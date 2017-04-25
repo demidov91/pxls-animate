@@ -11,8 +11,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-TWO_BYTES = 256 * 256
-
 
 def save_as_data(out_file: str):
     data = bytearray()
@@ -25,12 +23,12 @@ def save_as_data(out_file: str):
 
 def save_as_diff(out_file: str):
     base_file = get_last_data_file()
-    with compressed_bytes_reader(base_file) as base_br, gzip.open(out_file, 'wb') as out_fp:
+    with compressed_bytes_reader(base_file) as dat_reader, gzip.open(out_file, 'wb') as out_fp:
         for i, old_current_byte in enumerate(
-                zip(base_br.read_rectangle((0, 0), defines.DIMENSIONS), get_current_data_response().content)
+                zip(dat_reader.read_rectangle((0, 0), defines.DIMENSIONS), get_current_data_response().content)
         ):
             if old_current_byte[0] != old_current_byte[1]:
-                record = bytes((i // TWO_BYTES, (i % TWO_BYTES) // 256, i % 256 | old_current_byte[1]))
+                record = bytes((*i.to_bytes(3, 'big'), old_current_byte[1]))
                 logger.debug(record)
                 out_fp.write(record)
 
@@ -43,10 +41,17 @@ def diff_to_image(base_file: str, diff_file: str, out_file: str):
     base_image = data_file_to_pil_image(base_file)
     with gzip.open(diff_file, 'rb') as f:
         while True:
-            record = f.read(2)
+            record = f.read(4)
             if not record:
                 break
-            base_file[x, y] = 0
+
+            position = record[0] << 16 | record[1] << 8 | record[2]
+            coordinates = (position % defines.DIMENSIONS[0], position // defines.DIMENSIONS[0])
+            color = defines.PALETTE_BY_BYTE[record[3]]
+            logger.debug('Coordinates: %s. Color: %s.', coordinates, color)
+            base_image.putpixel(coordinates, color)
+
+    base_image.save(out_file)
 
 
 def create_gif(
@@ -65,6 +70,7 @@ if __name__ == '__main__':
     parser.add_argument('command', type=str, help='Command name')
     parser.add_argument('--out', type=str, dest='out_file', help='Output file')
     parser.add_argument('--in', type=str, dest='in_file', help='Input file')
+    parser.add_argument('--base', type=str, dest='base_file', help='Base file for diff files.')
     parser.add_argument('--start', type=str, dest='start_dt', help='Start datetime')
     parser.add_argument('--end', type=str, dest='end_dt', help='End datetime')
     parser.add_argument('--start-point', type=int, dest='start_point', nargs=2,
@@ -84,7 +90,12 @@ if __name__ == '__main__':
         save_as_diff(args.out_file)
 
     elif args.command == 'to-image':
-        dat_to_image(args.in_file, args.out_file, args.start_point, size, thumbnail)
+        if '.dat' in args.in_file:
+            dat_to_image(args.in_file, args.out_file, args.start_point, size, thumbnail)
+        elif '.diff' in args.in_file:
+            diff_to_image(args.base_file, args.in_file, args.out_file)
+        else:
+            raise ValueError(args.in_file)
 
     elif args.command == 'to-gif':
         if args.start_dt:
