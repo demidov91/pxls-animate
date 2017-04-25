@@ -28,7 +28,7 @@ def save_as_diff(out_file: str):
                 zip(dat_reader.read_rectangle((0, 0), defines.DIMENSIONS), get_current_data_response().content)
         ):
             if old_current_byte[0] != old_current_byte[1]:
-                record = bytes((*i.to_bytes(3, 'big'), old_current_byte[1]))
+                record = i.to_bytes(3, 'big') + bytes((old_current_byte[1], ))
                 logger.debug(record)
                 out_fp.write(record)
 
