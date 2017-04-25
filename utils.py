@@ -4,6 +4,7 @@ import os
 import datetime
 import re
 from contextlib import ContextDecorator
+import requests
 import numpy as np
 import settings
 from PIL import Image
@@ -34,8 +35,12 @@ def points_to_size(start_point: tuple, end_point: tuple):
     return tuple(b - a + 1 for a, b in zip(start_point, end_point))
 
 
+def get_current_data_response():
+    return requests.get(defines.CANVAS_URL, timeout=20, cookies={'pxls-agegate': '1'})
+
+
 def _data_file_to_rgb_array(dat_file: str, start_point=(0, 0), size=defines.DIMENSIONS):
-    with compressed_reader(dat_file) as reader:
+    with compressed_pixels_reader(dat_file) as reader:
         yield from reader.read_rectangle(start_point, size)
 
 
@@ -54,9 +59,6 @@ def data_file_to_pil_image(dat_file: str, start_point=(0, 0), size=defines.DIMEN
     return im
 
 
-
-
-
 def list_filepaths_in_datetime_range(start_dt, end_dt):
     paths = []
     for file_path in os.listdir(defines.DATA_DIR):
@@ -73,8 +75,8 @@ def list_filepaths_in_datetime_range(start_dt, end_dt):
     return sorted(paths)
 
 
-class compressed_reader(ContextDecorator):
-    extra_encoded_byte = None # type: int
+class compressed_bytes_reader(ContextDecorator):
+    extra_encoded_byte = None   # type: int
 
     def __init__(self, dat_file: str):
         self.dat_file = dat_file
@@ -90,19 +92,24 @@ class compressed_reader(ContextDecorator):
         for row in range(start[1], start[1] + size[1]):
             row_start = row * defines.DIMENSIONS[0] + start[0]
             self.fp.seek(row_start // 2)
-            yield from self._read_pixels(size[0], more=row_start % 2)
+            yield from self.read_bytes(size[0], more=row_start % 2)
 
-    def _read_pixels(self, n: int, more: bool=False):
+    def read_bytes(self, n: int, more: bool=False):
         if more:
-            yield defines.PALETTE_BY_BYTE[self.fp.read(1)[0] % 16]
+            yield self.fp.read(1)[0] % 16
             n -= 1
 
         for compressed in self.fp.read(n // 2):
-            yield defines.PALETTE_BY_BYTE[compressed >> 4]
-            yield defines.PALETTE_BY_BYTE[compressed % 16]
+            yield compressed >> 4
+            yield compressed % 16
 
         if n % 2:
-            yield defines.PALETTE_BY_BYTE[self.fp.read(1)[0] >> 4]
+            yield self.fp.read(1)[0] >> 4
+
+
+class compressed_pixels_reader(compressed_bytes_reader):
+    def read_rectangle(self, start: tuple, size: tuple):
+        return (defines.PALETTE_BY_BYTE[x] for x in super().read_rectangle(start, size))
 
 
 class GifBuilder:
@@ -188,3 +195,7 @@ def get_nearest_dat_file(target_time: datetime.datetime) -> str:
         return
 
     return os.path.join(defines.DATA_DIR, file_found)
+
+
+def get_last_data_file():
+    return os.path.join(defines.DATA_DIR, max(filter(lambda x: x.endswith('.dat'), os.listdir(defines.DATA_DIR))))
