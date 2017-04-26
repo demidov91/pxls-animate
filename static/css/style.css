@@ -6,5 +6,6 @@
 #buttons{width: 900px; margin: 0 auto;}
 #buttons>div{width: 50%;}
 .quality-block{margin-top: 0.5em;}
+.quality-block select{display: inline; width: 16em;}
 #header{text-align: center;}
 #footer{text-align: center;}

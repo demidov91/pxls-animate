@@ -35,16 +35,11 @@
                         </div>
                         <div class="quality-block">
                             <label>Detailing: </label>
-                            <div class="btn-group">
-                              <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Default (~7Mb, 30 sec.) <span class="caret"></span>
-                              </button>
-                              <ul class="dropdown-menu" name="gif-detailing">
-                                <li value="low"><a href="#">Fast (~2 Mb, 10 sec.)</a></li>
-                                <li value="medium"><a href="#">Default (~7 Mb, 40 sec.)</a></li>
-                                <li value="high"><a href="#">Detailed (~40 Mb, 2-3 min.)</a></li>
-                              </ul>
-                            </div>
+                            <select name="detailing" class="form-control">
+                                <option value="low">Fast (~2 Mb, 10 sec.)</option>
+                                <option value="medium" selected="selected">Medium (~7 Mb, 40 sec.)</option>
+                                <option value="high">Detailed (~70 Mb, 5-10 min., experimental)</option>
+                            </select>
                         </div>
                     </div>
                     <div class="toLeft" id="get-image">
