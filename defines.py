@@ -26,8 +26,6 @@ CANVAS_URL = 'http://pxls.space/boarddata'
 
 DIMENSIONS = (2000, 2000)
 
-DATA_DIR = 'data'
-
 DATA_DT_PER_SECOND_FORMAT = '%Y_%m_%d_%H_%M_%S'
 DATA_DT_PER_HOUR_FORMAT = '%Y_%m_%d_%H'
 

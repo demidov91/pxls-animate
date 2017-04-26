@@ -5,7 +5,7 @@ import argparse
 import defines
 
 from utils import data_file_to_pil_image, GifBuilder, configure_logger, points_to_size, compressed_bytes_reader, \
-    get_current_data_response, get_last_data_file
+    get_current_data_response, get_last_data_file, build_diff_name
 import datetime
 import logging
 
@@ -21,8 +21,9 @@ def save_as_data(out_file: str):
         f.write(data)
 
 
-def save_as_diff(out_file: str):
+def save_as_diff():
     base_file = get_last_data_file()
+    out_file = build_diff_name(base_file)
     with compressed_bytes_reader(base_file) as dat_reader, gzip.open(out_file, 'wb') as out_fp:
         for i, old_current_byte in enumerate(
                 zip(dat_reader.read_rectangle((0, 0), defines.DIMENSIONS), get_current_data_response().content)
@@ -70,7 +71,6 @@ if __name__ == '__main__':
     parser.add_argument('command', type=str, help='Command name')
     parser.add_argument('--out', type=str, dest='out_file', help='Output file')
     parser.add_argument('--in', type=str, dest='in_file', help='Input file')
-    parser.add_argument('--base', type=str, dest='base_file', help='Base file for diff files.')
     parser.add_argument('--start', type=str, dest='start_dt', help='Start datetime')
     parser.add_argument('--end', type=str, dest='end_dt', help='End datetime')
     parser.add_argument('--start-point', type=int, dest='start_point', nargs=2,
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         save_as_data(args.out_file)
 
     elif args.command == 'save-diff':
-        save_as_diff(args.out_file)
+        save_as_diff()
 
     elif args.command == 'to-image':
         if '.dat' in args.in_file:

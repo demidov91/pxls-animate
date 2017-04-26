@@ -15,8 +15,7 @@ from logging.config import dictConfig
 import logging
 logger = logging.getLogger(__name__)
 
-# Image data file names start with the following patter.
-dt_in_filename_pattern = re.compile('(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})')
+dat_file_name_pattern = re.compile('(?P<year>\d+)_(?P<month>\d+)_(?P<day>\d+)_(?P<hour>\d+).*\.dat')
 
 # Than more an image than more a step.
 SIZE_TO_CHOOSE_AN_HOUR_STEP = 200 * 200
@@ -100,8 +99,6 @@ class GifBuilder:
     step = None         # type: int
     files_count = None  # type: int
 
-    dat_file_name_pattern = re.compile('(?P<year>\d+)_(?P<month>\d+)_(?P<day>\d+)_(?P<hour>\d+).*\.dat')
-
     def __init__(self,
                  start_dt: datetime.datetime,
                  end_dt: datetime.datetime,
@@ -139,7 +136,7 @@ class GifBuilder:
         match_and_file = sorted(
             filter(
                 lambda x: x[0] is not None,
-                ((self.dat_file_name_pattern.match(x), x) for x in os.listdir(defines.DATA_DIR))
+                ((dat_file_name_pattern.match(x), x) for x in os.listdir(settings.DATA_DIR))
             ), key=lambda x: x[1]
         )
         time_and_path = (
@@ -150,7 +147,7 @@ class GifBuilder:
                     day=int(match.group('day')),
                     hour=int(match.group('hour'))
                 ),
-                os.path.join(defines.DATA_DIR, file)
+                os.path.join(settings.DATA_DIR, file)
             ) for match, file in match_and_file
         )
 
@@ -170,7 +167,6 @@ class GifBuilder:
             if i == len(times):
                 # Forward step was done.
                 break
-
 
             if i == len(times) - 1:
                 # Files ended.
@@ -212,7 +208,7 @@ def get_nearest_dat_file(target_time: datetime.datetime) -> str:
     min_delta = datetime.timedelta(days=2)
     file_found = None
 
-    for file_name in os.listdir(defines.DATA_DIR):
+    for file_name in os.listdir(settings.DATA_DIR):
         datetime_match = search_pattern.match(file_name)
         if not datetime_match:
             continue
@@ -233,7 +229,7 @@ def get_nearest_dat_file(target_time: datetime.datetime) -> str:
     if file_found is None:
         return
 
-    return os.path.join(defines.DATA_DIR, file_found)
+    return os.path.join(settings.DATA_DIR, file_found)
 
 
 def parse_datetime(datetime_string, formats):
@@ -247,4 +243,36 @@ def parse_datetime(datetime_string, formats):
 
 
 def get_last_data_file():
-    return os.path.join(defines.DATA_DIR, max(filter(lambda x: x.endswith('.dat'), os.listdir(defines.DATA_DIR))))
+    return os.path.join(
+        settings.DATA_DIR,
+        max(filter(lambda x: dat_file_name_pattern.match(x), os.listdir(settings.DATA_DIR)))
+    )
+
+
+def build_diff_name(base_file):
+    """
+    Assumed that all new dat files are created only at exact start of an hour.
+    :param base_file: base file full path.
+    :return: full path for a new diff file.
+    """
+    base_match = dat_file_name_pattern.search(base_file)
+    if not base_match:
+        raise ValueError(base_file)
+
+    base_time = datetime.datetime(
+        year=int(base_match.group('year')),
+        month=int(base_match.group('month')),
+        day=int(base_match.group('day')),
+        hour=int(base_match.group('hour'))
+    )
+    current_time = datetime.datetime.now()
+
+    minutes_diff = int(round((current_time - base_time).seconds / 60))
+
+    return os.path.join(settings.DATA_DIR, '{}_{}_{}_{}_{}.diff'.format(
+        base_match.group('year'),
+        base_match.group('month'),
+        base_match.group('day'),
+        base_match.group('hour'),
+        minutes_diff,
+    ))
