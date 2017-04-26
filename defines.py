@@ -28,7 +28,8 @@ DIMENSIONS = (2000, 2000)
 
 DATA_DIR = 'data'
 
-DATA_DT_FORMAT = '%Y_%m_%d_%H_%M_%S'
+DATA_DT_PER_SECOND_FORMAT = '%Y_%m_%d_%H_%M_%S'
+DATA_DT_PER_HOUR_FORMAT = '%Y_%m_%d_%H'
 
 API_DATETIME_FORMAT = '%Y-%m-%d-%H%M'
 

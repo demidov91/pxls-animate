@@ -41,8 +41,8 @@ def get_image():
 
 @app.route('/gif')
 def get_gif():
-    start = get_flask_datetime('start')
-    end = get_flask_datetime('end')
+    start = None    # Time ranges are not supported at the moment.
+    end = None      # Time ranges are not supported at the moment.
     start_point = get_coordinates('start-point') or (0, 0)
     end_point = get_coordinates('end-point') or tuple(x - 1 for x in defines.DIMENSIONS)
     thumbnail = get_flask_float('thumbnail')
@@ -54,7 +54,7 @@ def get_gif():
     response = make_response(buffer.getvalue())
     response.headers['Content-Type'] = 'image/gif'
     if not end:
-        response.headers['Cache-Control'] = 'max-age={}'.format(gif_builder.step * 60)
+        response.headers['Cache-Control'] = 'max-age={}'.format(gif_builder.minutes_step * 60 )
 
     if get_flask_arg('file') is not None:
         start_as_text = start and start.strftime('%Y-%m-%d %H:%M') or 'start'
