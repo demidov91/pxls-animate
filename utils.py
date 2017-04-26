@@ -17,8 +17,6 @@ logger = logging.getLogger(__name__)
 
 dat_file_name_pattern = re.compile('(?P<year>\d+)_(?P<month>\d+)_(?P<day>\d+)_(?P<hour>\d+).*\.dat')
 
-# Than more an image than more a step.
-SIZE_TO_CHOOSE_AN_HOUR_STEP = 200 * 200
 
 SEARCH_FOR_DATA_FILE_BY_PATTERN = '%Y_%m_%d'
 
@@ -99,20 +97,33 @@ class GifBuilder:
     step = None         # type: int
     files_count = None  # type: int
 
+    DETAILING_LOW = 0
+    DETAILING_MEDIUM = 1
+    DETAILING_HIGH = 2
+
+    DETAILING_TO_HOUR_STEP_SIZE = {
+        DETAILING_LOW: 100 * 100,
+        DETAILING_MEDIUM: 200 * 200,
+        DETAILING_HIGH: 600 * 600,
+    }
+
     def __init__(self,
                  start_dt: datetime.datetime,
                  end_dt: datetime.datetime,
                  start_point: tuple,
                  size: tuple,
-                 thumbnail: float=None):
+                 thumbnail: float=None,
+                 detailing: int=DETAILING_MEDIUM):
         self.start_dt = defines.START_DATETIME
         self.end_dt = datetime.datetime.now()
         self.start_point = start_point
         self.size = size
         self.thumbnail = thumbnail
+        self.size_to_choose_an_hour_step = \
+            self.DETAILING_TO_HOUR_STEP_SIZE[detailing if detailing is not None else self.DETAILING_MEDIUM]
 
     def build(self, target):
-        self.step = (self.size[0] * self.size[1]) // SIZE_TO_CHOOSE_AN_HOUR_STEP or 1
+        self.step = (self.size[0] * self.size[1]) // self.size_to_choose_an_hour_step or 1
 
         logger.info('Step %d is chosen for %dx%d gif', self.step, self.size[0], self.size[1])
 

@@ -1,7 +1,7 @@
 function multiply(data, koef){
     var multiplied = [];
     for (i=0; i < data.length; i++){
-        multiplied.push(Math.floor(data[i] * koef));
+        multiplied.push(Math.round(data[i] * koef));
     }
     return multiplied;
 }
@@ -47,7 +47,7 @@ $(function(){
                 return;
             }
             $('html, body').animate({
-                scrollTop: $("form").offset().top
+                scrollTop: $("#header").offset().top
             }, 200);
         },
 
@@ -110,12 +110,29 @@ $(function(){
         },
 
         toApiCoordinates: function(coordinates) {
-            console.log(this.thumbnail);
-            return this.thumbnail ? multiply(coordinates, 1 / this.thumbnail): coordinates;
+            if (this.thumbnail){
+                return this.clearApiCoordinates(multiply(coordinates, 1 / this.thumbnail));
+            }
+
+            return coordinates;
         },
 
         toThumbnailCoordinates: function(coordinates) {
             return this.thumbnail ? multiply(coordinates, this.thumbnail): coordinates;
+        },
+
+        clearApiCoordinates: function(int_coordinates){
+            var clearedCoordinates = [];
+            for (i=0; i< int_coordinates.length; i++){
+                if (int_coordinates[i] < 0){
+                    clearedCoordinates.push(0);
+                } else if (int_coordinates[i] >= this.BOTH_DIMENSIONS) {
+                    clearedCoordinates.push(this.BOTH_DIMENSIONS - 1);
+                } else {
+                    clearedCoordinates.push(int_coordinates[i]);
+                }
+            }
+            return clearedCoordinates;
         }
     }
     App.init();

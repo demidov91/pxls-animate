@@ -1,7 +1,14 @@
 from flask import request
 import datetime
+from utils import GifBuilder
 
 import defines
+
+API_DETAILING_TO_INTERNAL = {
+    'low': GifBuilder.DETAILING_LOW,
+    'medium': GifBuilder.DETAILING_MEDIUM,
+    'high': GifBuilder.DETAILING_HIGH,
+}
 
 
 def get_flask_datetime(arg_name):
@@ -31,6 +38,14 @@ def get_flask_float(arg_name):
         return None
 
     return float(arg)
+
+
+def get_flask_detailing(arg_name):
+    arg = request.args.get(arg_name)
+    if not arg:
+        return None
+
+    return API_DETAILING_TO_INTERNAL[arg]
 
 
 def get_flask_arg(arg_name):

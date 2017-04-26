@@ -1,6 +1,6 @@
 from flask import Flask, make_response
 from utils import configure_logger, data_file_to_pil_image, points_to_size, get_nearest_dat_file, GifBuilder
-from flask_util import get_flask_datetime, get_coordinates, get_flask_arg, get_flask_float
+from flask_util import get_flask_datetime, get_coordinates, get_flask_arg, get_flask_float, get_flask_detailing
 from io import BytesIO
 import datetime
 import logging
@@ -46,9 +46,10 @@ def get_gif():
     start_point = get_coordinates('start-point') or (0, 0)
     end_point = get_coordinates('end-point') or tuple(x - 1 for x in defines.DIMENSIONS)
     thumbnail = get_flask_float('thumbnail')
+    detailing = get_flask_detailing('detailing')
 
     buffer = BytesIO()
-    gif_builder = GifBuilder(start, end, start_point, points_to_size(start_point, end_point), thumbnail)
+    gif_builder = GifBuilder(start, end, start_point, points_to_size(start_point, end_point), thumbnail, detailing)
     gif_builder.build(buffer)
 
     response = make_response(buffer.getvalue())

@@ -1,7 +1,10 @@
 .toLeft{float: left;}
 .clear{clear:both;}
 
-#buttons{width: 500px; text-align: center;}
+#coordinates {margin: 0 auto;}
+#coordinates .caption {text-align: right; padding-right: 0.5em;}
+#buttons{width: 900px; margin: 0 auto;}
 #buttons>div{width: 50%;}
-#buttons h8{font-size: 0.5em;}
+.quality-block{margin-top: 0.5em;}
+#header{text-align: center;}
 #footer{text-align: center;}
